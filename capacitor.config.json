@@ -1,0 +1,11 @@
+{
+  "appId": "com.example.app",
+  "appName": "Dem_sinh_nhat",
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": {
+   
+      "iconColor": "#488AFF"
+    }
+  }
+}

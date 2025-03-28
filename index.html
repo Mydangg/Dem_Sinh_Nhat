@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đếm ngược sinh nhật</title>
+    <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
+    <script src="https://unpkg.com/@capacitor/local-notifications@latest"></script>
+    <script src="https://unpkg.com/@capacitor/share@latest"></script>
+    <script src="https://unpkg.com/@capacitor/device@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f0f0f0; /* Màu nền */
+        }
+        h1 {
+            color: #333; /* Màu chữ tiêu đề */
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px; /* Bo tròn viền */
+            border: 1px solid #ccc; /* Viền */
+        }
+        button {
+            background-color: #007bff; /* Màu nút */
+            color: #fff; /* Màu chữ nút */
+            cursor: pointer; /* Con trỏ khi di chuột vào */
+            transition: background-color 0.3s ease; /* Hiệu ứng màu nền */
+        }
+        button:hover {
+            background-color: #0056b3; /* Màu nền khi di chuột vào */
+        }
+        #result {
+            font-size: 18px; /* Kích thước chữ kết quả */
+            margin-top: 20px; /* Khoảng cách từ kết quả đến các nút */
+        }
+        #battery-status {
+            margin-top: 20px; /* Khoảng cách từ trạng thái pin đến các nút */
+        }
+    </style>
+</head>
+<body>
+    <h1>Đếm ngược sinh nhật</h1>
+    <input type="date" id="birthday" placeholder="Nhập ngày sinh (dd/mm)">
+    <button onclick="calculateDaysUntilBirthday()">Tính thời gian còn lại</button>
+    <button onclick="shareResult()">Chia sẻ kết quả</button>
+    <p id="result"></p>
+    <div>
+        <button onclick="checkBattery()">Kiểm tra trạng thái pin</button>
+        <p id="battery-status"></p>
+    </div>
+
+    <script>
+        function calculateDaysUntilBirthday() {
+            const birthdayInput = document.getElementById('birthday').value;
+            if (!birthdayInput) {
+                alert("Vui lòng nhập ngày sinh!");
+                return;
+            }
+
+            const today = new Date();
+            const birthDate = new Date(birthdayInput);
+            birthDate.setFullYear(today.getFullYear());
+
+            if (birthDate < today) {
+                birthDate.setFullYear(today.getFullYear() + 1);
+            }
+
+            const diffTime = birthDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            const resultText = `Còn ${diffDays} ngày nữa đến sinh nhật tiếp theo của bạn.`;
+            document.getElementById('result').innerText = resultText;
+
+            // Hiển thị thông báo cục bộ
+            Capacitor.Plugins.LocalNotifications.schedule({
+                notifications: [{
+                    id: 1,
+                    title: "Đếm ngược sinh nhật",
+                    body: resultText
+                }]
+            });
+        }
+
+        async function shareResult() {
+            const resultText = document.getElementById('result').innerText;
+            if (!resultText) {
+                alert("Hãy tính thời gian trước khi chia sẻ!");
+                return;
+            }
+
+            try {
+                await Capacitor.Plugins.Share.share({
+                    title: "Đếm ngược sinh nhật",
+                    text: resultText,
+                    dialogTitle: "Chia sẻ kết quả"
+                });
+            } catch (error) {
+                console.error("Lỗi chia sẻ:", error);
+                alert("Không thể chia sẻ kết quả!");
+            }
+        }
+
+        async function checkBattery() {
+            try {
+                const batteryInfo = await Capacitor.Plugins.Device.getBatteryInfo();
+                const batteryStatusText = `Pin hiện tại: ${batteryInfo.batteryLevel * 100}% (Sạc: ${batteryInfo.isCharging ? 'Có' : 'Không'})`;
+                document.getElementById('battery-status').innerText = batteryStatusText;
+            } catch (error) {
+                console.error("Lỗi kiểm tra pin:", error);
+                alert("Không thể lấy trạng thái pin!");
+            }
+        }
+    </script>
+</body>
+</html>
